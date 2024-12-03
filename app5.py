@@ -106,8 +106,19 @@ elif menu == "Model Training":
             st.subheader("Confusion Matrix")
             cm = confusion_matrix(y_test, y_pred)
             fig, ax = plt.subplots()
-            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Negative', 'Neutral', 'Positive'], yticklabels=['Negative', 'Neutral', 'Positive'])
             st.pyplot(fig)
+
+            # Suggestion based on sentiment
+            st.subheader("Suggestion Based on Sentiment")
+            sentiment_counts = pd.Series(y_pred).value_counts()
+
+            if sentiment_counts.idxmax() == 'Positive':
+                st.success("Most reviews are positive! Keep up the good work and continue to improve.")
+            elif sentiment_counts.idxmax() == 'Negative':
+                st.error("Many reviews are negative. Consider addressing common issues mentioned.")
+            else:
+                st.info("Neutral sentiment dominates. Engage with users to create a stronger positive experience.")
 
     else:
         st.warning("Please upload a dataset in the Data Analysis section first.")
