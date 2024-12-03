@@ -42,7 +42,7 @@ st.markdown("""
         .button {
             font-size: 16px;
             background-color: #2E8B57;
-            color: white;
+            color: green;
             padding: 10px 16px;
             border-radius: 5px;
             text-align: center;
