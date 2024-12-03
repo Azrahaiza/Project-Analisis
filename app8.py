@@ -30,20 +30,20 @@ st.markdown("""
         }
         .description {
             font-size: 24px;
-            color: #FFF5E1;
+            color: #FFA500;
             text-align: center;
             margin-bottom: 20px;
         }
         .subheader {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             color: #4682B4;
         }
         .button {
-            font-size: 16px;
+            font-size: 14px;
             background-color: #2E8B57;
             color: green;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border-radius: 5px;
             text-align: center;
         }
@@ -135,16 +135,16 @@ if uploaded_file:
     # --- Visualisasi ---
     def plot_sentiment_distribution(data, sentiment_column):
         sns.set(style="whitegrid")
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(7, 4))
         sns.countplot(x=sentiment_column, data=data, palette="Set2")
-        plt.title('Distribusi Sentimen', fontsize=16)
-        plt.xlabel('Sentimen', fontsize=14)
-        plt.ylabel('Jumlah', fontsize=14)
+        plt.title('Distribusi Sentimen', fontsize=14)
+        plt.xlabel('Sentimen', fontsize=12)
+        plt.ylabel('Jumlah', fontsize=12)
         st.pyplot(plt)
 
     def plot_wordcloud(text):
         wordcloud = WordCloud(width=700, height=400, background_color="white", colormap="jet").generate(text)
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(7, 4))
         plt.imshow(wordcloud, interpolation="bilinear")
         plt.axis("off")
         st.pyplot(plt)
@@ -190,11 +190,11 @@ if uploaded_file:
 
     # Menampilkan Confusion Matrix dengan styling
     cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(7, 4))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Negatif', 'Netral', 'Positif'], yticklabels=['Negatif', 'Netral', 'Positif'])
-    plt.title('Confusion Matrix', fontsize=16)
-    plt.xlabel('Prediksi', fontsize=14)
-    plt.ylabel('Sebenarnya', fontsize=14)
+    plt.title('Confusion Matrix', fontsize=14)
+    plt.xlabel('Prediksi', fontsize=12)
+    plt.ylabel('Sebenarnya', fontsize=12)
     st.pyplot(plt)
 
     # --- Menyimpan dan Mengunduh Data yang Sudah Diproses ---
