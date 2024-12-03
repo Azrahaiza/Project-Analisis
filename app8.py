@@ -23,21 +23,21 @@ st.set_page_config(page_title="Analisis Sentimen Penggunaan Aplikasi Info BMKG",
 st.markdown("""
     <style>
         .title {
-            font-size: 36px;
+            font-size: 48px;
             font-weight: bold;
-            color: #2E8B57;
+            color: #87CEFA;
             text-align: center;
         }
         .description {
-            font-size: 18px;
-            color: #4B0082;
+            font-size: 12px;
+            color: #FFF5E1;
             text-align: center;
             margin-bottom: 20px;
         }
         .subheader {
             font-size: 24px;
             font-weight: bold;
-            color: #FF6347;
+            color: #4682B4;
         }
         .button {
             font-size: 16px;
