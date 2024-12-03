@@ -21,10 +21,10 @@ nltk.download('stopwords')
 
 # --- Load Dataset ---
 st.title("Analisis Sentimen Ulasan Penggunaan Aplikasi Info BMKG")
-st.write("Visualisasi 5000 data awal dan hasil stemming pertama.")
+st.write("Visualisasi data mentah dan hasil stemming pertama.")
 
 # Load data
-df_busu = pd.read_csv('data_reviews_with_sentiment (5)')  # Replace with your dataset
+f_busu = pd.read_csv('data_reviews_with_sentiment (5).csv') # Replace with your dataset
 st.write("5000 Data Awal:")
 st.write(df_busu.head(5000))
 
