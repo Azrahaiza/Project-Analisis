@@ -41,6 +41,16 @@ if uploaded_file:
     # Misalkan kolom 'score' berisi score (1-5)
     f_busu['sentiment'] = f_busu.apply(assign_sentiment, axis=1)
 
+    # Tampilkan data berdasarkan sentiment
+    st.subheader("Data dengan Sentimen Positif:")
+    st.write(f_busu[f_busu['sentiment'] == 'Positif'].head(10))  # Menampilkan 10 data pertama dengan sentimen Positif
+
+    st.subheader("Data dengan Sentimen Netral:")
+    st.write(f_busu[f_busu['sentiment'] == 'Netral'].head(10))  # Menampilkan 10 data pertama dengan sentimen Netral
+
+    st.subheader("Data dengan Sentimen Negatif:")
+    st.write(f_busu[f_busu['sentiment'] == 'Negatif'].head(10))  # Menampilkan 10 data pertama dengan sentimen Negatif
+
     # --- Pembersihan Data ---
     def clean_text(df, text_field, new_text_field_name):
         df[new_text_field_name] = df[text_field].str.lower()  # Mengubah teks menjadi huruf kecil
