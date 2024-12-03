@@ -1,0 +1,10 @@
+tensorflow
+imbalanced-learn
+scikit-learn
+pandas
+nltk
+matplotlib
+seaborn
+wordcloud
+streamlit
+pip
