@@ -24,9 +24,9 @@ st.title("Analisis Sentimen Ulasan Penggunaan Aplikasi Info BMKG")
 st.write("Visualisasi data mentah dan hasil stemming pertama.")
 
 # Load data
-f_busu = pd.read_csv('data_reviews_with_sentiment (5).csv') # Replace with your dataset
-st.write("5000 Data Awal:")
-st.write(df_busu.head(5000))
+f_busu = pd.read_csv('data_reviews_with_sentiment (5).csv')  # Replace with your dataset
+st.write("Data Mentah:")
+st.write(f_busu.head(5000))  # Mengganti df_busu dengan f_busu
 
 # --- Data Cleaning ---
 def clean_text(df, text_field, new_text_field_name):
@@ -46,13 +46,13 @@ def apply_stemming(text):
     return ' '.join([stemmer.stem(word) for word in text.split()])
 
 # Clean text
-df_busu_clean = clean_text(df_busu, 'content', 'text_clean')
-df_busu_clean['text_StopWord'] = df_busu_clean['text_clean'].apply(remove_stopwords)
-df_busu_clean['text_stemmed'] = df_busu_clean['text_StopWord'].apply(apply_stemming)
+f_busu_clean = clean_text(f_busu, 'content', 'text_clean')  # Mengganti df_busu menjadi f_busu
+f_busu_clean['text_StopWord'] = f_busu_clean['text_clean'].apply(remove_stopwords)
+f_busu_clean['text_stemmed'] = f_busu_clean['text_StopWord'].apply(apply_stemming)
 
 # Display the first 10 rows of stemmed data
 st.write("10 Data Setelah Stemming:")
-st.write(df_busu_clean[['text_clean', 'text_stemmed']].head(10))
+st.write(f_busu_clean[['text_clean', 'text_stemmed']].head(10))
 
 # --- Visualization ---
 def plot_sentiment_distribution(data, sentiment_column):
@@ -70,15 +70,15 @@ def plot_wordcloud(text):
     st.pyplot(plt)
 
 # Visualizations
-if 'sentiment' in df_busu_clean.columns:
-    plot_sentiment_distribution(df_busu_clean, 'sentiment')
+if 'sentiment' in f_busu_clean.columns:
+    plot_sentiment_distribution(f_busu_clean, 'sentiment')
 
-all_text = " ".join(df_busu_clean["text_stemmed"].dropna())
+all_text = " ".join(f_busu_clean["text_stemmed"].dropna())
 plot_wordcloud(all_text)
 
 # --- Machine Learning ---
-X = df_busu_clean['text_stemmed']
-y = df_busu_clean['sentiment']
+X = f_busu_clean['text_stemmed']
+y = f_busu_clean['sentiment']
 
 # Prepare data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -108,10 +108,10 @@ plt.ylabel('True')
 st.pyplot(plt)
 
 # --- Save and Download Processed Data ---
-df_busu_clean.to_csv('data_reviews_with_sentiment_cleaned.csv', index=False)
+f_busu_clean.to_csv('data_reviews_with_sentiment_cleaned.csv', index=False)
 st.download_button(
     label="Download Cleaned Data",
-    data=df_busu_clean.to_csv(index=False),
+    data=f_busu_clean.to_csv(index=False),
     file_name="data_reviews_with_sentiment_cleaned.csv",
     mime="text/csv"
 )
