@@ -70,10 +70,10 @@ def evaluate_model(model, X_test, y_test):
     st.pyplot(plt)
 
 # --- Main Streamlit App ---
-st.title("Sentiment Analysis for Info BMKG Reviews")
+st.title("Analisis Sentimen Apikasi Info BMKG")
 
 # Load dataset
-df_busu = pd.read_csv('data_reviews_with_sentiment.csv')
+df_busu = pd.read_csv('data_reviews_with_sentiment (5).csv')
 
 # Clean text
 df_busu_clean = clean_text(df_busu, 'content', 'text_clean')
