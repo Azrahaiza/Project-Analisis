@@ -27,23 +27,23 @@ uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 if uploaded_file:
     f_busu = pd.read_csv(uploaded_file)
     st.subheader("Data Mentah:")
-    st.write(f_busu.head(10))  # Show the first 10 rows of the raw data
+    st.write(f_busu.head(10))  # Menampilkan 10 data pertama dari dataset mentah
 
-    # --- Sentiment Labeling Based on Star Ratings ---
+    # --- Penentuan Sentimen Berdasarkan Score ---
     def assign_sentiment(row):
-        if row['rating'] >= 4:  # Rating 4 or 5 = Positive
+        if row['score'] >= 4:  # Score 4 atau 5 = Positif
             return 'Positif'
-        elif row['rating'] == 3:  # Rating 3 = Neutral
+        elif row['score'] == 3:  # Score 3 = Netral
             return 'Netral'
-        else:  # Rating 1 or 2 = Negative
+        else:  # Score 1 atau 2 = Negatif
             return 'Negatif'
 
-    # Assuming the 'rating' column holds the star ratings (1-5)
+    # Misalkan kolom 'score' berisi score (1-5)
     f_busu['sentiment'] = f_busu.apply(assign_sentiment, axis=1)
 
-    # --- Data Cleaning ---
+    # --- Pembersihan Data ---
     def clean_text(df, text_field, new_text_field_name):
-        df[new_text_field_name] = df[text_field].str.lower()  # Convert to lowercase
+        df[new_text_field_name] = df[text_field].str.lower()  # Mengubah teks menjadi huruf kecil
         df[new_text_field_name] = df[new_text_field_name].apply(
             lambda elem: re.sub(r"@[A-Za-z0-9]+|(\w+:\/\/\S+)|^rt|http\S*|[^\w\s]", "", elem)
         )
@@ -58,33 +58,33 @@ if uploaded_file:
         stemmer = PorterStemmer()
         return ' '.join([stemmer.stem(word) for word in text.split()])
 
-    # Clean text
+    # Pembersihan teks
     f_busu_clean = clean_text(f_busu, 'content', 'text_clean')
 
-    # Display cleaned text
+    # Menampilkan data setelah pembersihan
     st.subheader("Data Setelah Pembersihan (Clean Text):")
     st.write(f_busu_clean[['content', 'text_clean']].head(10))
 
-    # Remove stopwords
+    # Menghapus stopword
     f_busu_clean['text_StopWord'] = f_busu_clean['text_clean'].apply(remove_stopwords)
 
-    # Display data after stopword removal
+    # Menampilkan data setelah penghapusan stopword
     st.subheader("Data Setelah Penghapusan Stopword:")
     st.write(f_busu_clean[['text_clean', 'text_StopWord']].head(10))
 
-    # Apply stemming
+    # Melakukan stemming
     f_busu_clean['text_stemmed'] = f_busu_clean['text_StopWord'].apply(apply_stemming)
 
-    # Display data after stemming
+    # Menampilkan data setelah stemming
     st.subheader("Data Setelah Stemming:")
     st.write(f_busu_clean[['text_StopWord', 'text_stemmed']].head(10))
 
-    # --- Visualization ---
+    # --- Visualisasi ---
     def plot_sentiment_distribution(data, sentiment_column):
         sns.countplot(x=sentiment_column, data=data)
-        plt.title('Sentiment Distribution')
-        plt.xlabel('Sentiment')
-        plt.ylabel('Count')
+        plt.title('Distribusi Sentimen')
+        plt.xlabel('Sentimen')
+        plt.ylabel('Jumlah')
         st.pyplot(plt)
 
     def plot_wordcloud(text):
@@ -94,7 +94,7 @@ if uploaded_file:
         plt.axis("off")
         st.pyplot(plt)
 
-    # Sentiment distribution
+    # Distribusi Sentimen
     st.subheader("Distribusi Sentimen:")
     plot_sentiment_distribution(f_busu_clean, 'sentiment')
 
@@ -107,37 +107,37 @@ if uploaded_file:
     X = f_busu_clean['text_stemmed']
     y = f_busu_clean['sentiment']
 
-    # Prepare data for training
+    # Menyiapkan data untuk pelatihan
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     vectorizer = TfidfVectorizer(max_features=5000)
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_test_tfidf = vectorizer.transform(X_test)
 
-    # SMOTE for balancing the dataset
+    # SMOTE untuk mengatasi ketidakseimbangan data
     smote = SMOTE(sampling_strategy='auto', random_state=42)
     X_train_smote, y_train_smote = smote.fit_resample(X_train_tfidf, y_train)
 
-    # Train the SVM model
+    # Melatih model SVM
     svm_model = SVC(kernel='linear')
     svm_model.fit(X_train_smote, y_train_smote)
 
-    # Evaluate the model
+    # Evaluasi model
     y_pred = svm_model.predict(X_test_tfidf)
-    st.subheader("Classification Report:")
+    st.subheader("Laporan Klasifikasi:")
     st.write(classification_report(y_test, y_pred))
 
-    # Confusion matrix
+    # Matriks kebingunguan
     cm = confusion_matrix(y_test, y_pred)
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Negatif', 'Netral', 'Positif'], yticklabels=['Negatif', 'Netral', 'Positif'])
-    plt.title('Confusion Matrix')
-    plt.xlabel('Predicted')
-    plt.ylabel('True')
+    plt.title('Matriks Kebingunguan')
+    plt.xlabel('Prediksi')
+    plt.ylabel('Sebenarnya')
     st.pyplot(plt)
 
-    # --- Save and Download Processed Data ---
+    # --- Menyimpan dan Mengunduh Data yang Sudah Diproses ---
     f_busu_clean.to_csv('data_reviews_with_sentiment_cleaned.csv', index=False)
     st.download_button(
-        label="Download Cleaned Data",
+        label="Unduh Data yang Sudah Diproses",
         data=f_busu_clean.to_csv(index=False),
         file_name="data_reviews_with_sentiment_cleaned.csv",
         mime="text/csv"
