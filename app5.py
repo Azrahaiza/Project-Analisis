@@ -2,123 +2,133 @@ import streamlit as st
 import pandas as pd
 import re
 import nltk
-from wordcloud import WordCloud
-import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+import seaborn as sns
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from wordcloud import WordCloud
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
-from sklearn.metrics import classification_report, confusion_matrix
-
-nltk.download('stopwords')
-nltk.download('punkt')
-from nltk.corpus import stopwords
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report
 from nltk.stem import PorterStemmer
+from imblearn.over_sampling import SMOTE
 
-# Cleaning functions
-def clean_text(text):
-    text = text.lower()
-    text = re.sub(r"@[A-Za-z0-9]+|https?:\/\/\S+|www\.\S+", "", text)
-    text = re.sub(r"[^a-zA-Z\s]", "", text)
-    text = re.sub(r"\d+", "", text)
-    return text
+# Download necessary NLTK resources
+nltk.download('punkt')
+nltk.download('stopwords')
 
-def remove_stopwords(text):
-    stop_words = set(stopwords.words('indonesian'))
-    return " ".join([word for word in text.split() if word not in stop_words])
+# Streamlit setup
+st.title("Analisis Sentimen Ulasan Penggunaan Aplikasi Info BMKG")
+st.write("**Visualisasi data mentah dan hasil proses pembersihan data secara bertahap.**")
 
-def stem_text(text):
-    stemmer = PorterStemmer()
-    return " ".join([stemmer.stem(word) for word in text.split()])
+# Upload dataset
+uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
+if uploaded_file:
+    f_busu = pd.read_csv(uploaded_file)
+    st.subheader("Data Mentah:")
+    st.write(f_busu.head(10))  # Show the first 10 rows of the raw data
 
-# Load data
-st.sidebar.title("Navigation")
-menu = st.sidebar.radio("Select Section", ["Home", "Data Analysis", "Model Training"])
+    # --- Data Cleaning ---
+    def clean_text(df, text_field, new_text_field_name):
+        df[new_text_field_name] = df[text_field].str.lower()  # Convert to lowercase
+        df[new_text_field_name] = df[new_text_field_name].apply(
+            lambda elem: re.sub(r"@[A-Za-z0-9]+|(\w+:\/\/\S+)|^rt|http\S*|[^\w\s]", "", elem)
+        )
+        df[new_text_field_name] = df[new_text_field_name].apply(lambda elem: re.sub(r"\d+", "", elem))
+        return df
 
-if menu == "Home":
-    st.title("Sentiment Analysis Application")
-    st.markdown(
-        """
-        <div style="background-color:#e8f5e9;padding:10px;border-radius:10px;">
-            <h3 style="color:#2e7d32;">Welcome to the Sentiment Analysis App!</h3>
-            <p>Analyze reviews to determine sentiment (positive, negative, or neutral).</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    def remove_stopwords(text):
+        stop = stopwords.words('indonesian')
+        return ' '.join([word for word in text.split() if word not in stop])
+
+    def apply_stemming(text):
+        stemmer = PorterStemmer()
+        return ' '.join([stemmer.stem(word) for word in text.split()])
+
+    # Clean text
+    f_busu_clean = clean_text(f_busu, 'content', 'text_clean')
+
+    # Display cleaned text
+    st.subheader("Data Setelah Pembersihan (Clean Text):")
+    st.write(f_busu_clean[['content', 'text_clean']].head(10))
+
+    # Remove stopwords
+    f_busu_clean['text_StopWord'] = f_busu_clean['text_clean'].apply(remove_stopwords)
+
+    # Display data after stopword removal
+    st.subheader("Data Setelah Penghapusan Stopword:")
+    st.write(f_busu_clean[['text_clean', 'text_StopWord']].head(10))
+
+    # Apply stemming
+    f_busu_clean['text_stemmed'] = f_busu_clean['text_StopWord'].apply(apply_stemming)
+
+    # Display data after stemming
+    st.subheader("Data Setelah Stemming:")
+    st.write(f_busu_clean[['text_StopWord', 'text_stemmed']].head(10))
+
+    # --- Visualization ---
+    def plot_sentiment_distribution(data, sentiment_column):
+        sns.countplot(x=sentiment_column, data=data)
+        plt.title('Sentiment Distribution')
+        plt.xlabel('Sentiment')
+        plt.ylabel('Count')
+        st.pyplot(plt)
+
+    def plot_wordcloud(text):
+        wordcloud = WordCloud(width=700, height=400, background_color="white", colormap="jet").generate(text)
+        plt.figure(figsize=(5, 5))
+        plt.imshow(wordcloud, interpolation="bilinear")
+        plt.axis("off")
+        st.pyplot(plt)
+
+    # Sentiment distribution
+    if 'sentiment' in f_busu_clean.columns:
+        st.subheader("Distribusi Sentimen:")
+        plot_sentiment_distribution(f_busu_clean, 'sentiment')
+
+    # Word cloud
+    all_text = " ".join(f_busu_clean["text_stemmed"].dropna())
+    st.subheader("Word Cloud:")
+    plot_wordcloud(all_text)
+
+    # --- Machine Learning ---
+    if 'sentiment' in f_busu_clean.columns:
+        X = f_busu_clean['text_stemmed']
+        y = f_busu_clean['sentiment']
+
+        # Prepare data for training
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        vectorizer = TfidfVectorizer(max_features=5000)
+        X_train_tfidf = vectorizer.fit_transform(X_train)
+        X_test_tfidf = vectorizer.transform(X_test)
+
+        # SMOTE for balancing the dataset
+        smote = SMOTE(sampling_strategy='auto', random_state=42)
+        X_train_smote, y_train_smote = smote.fit_resample(X_train_tfidf, y_train)
+
+        # Train the SVM model
+        svm_model = SVC(kernel='linear')
+        svm_model.fit(X_train_smote, y_train_smote)
+
+        # Evaluate the model
+        y_pred = svm_model.predict(X_test_tfidf)
+        st.subheader("Classification Report:")
+        st.write(classification_report(y_test, y_pred))
+
+        # Confusion matrix
+        cm = confusion_matrix(y_test, y_pred)
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Negatif', 'Netral', 'Positif'], yticklabels=['Negatif', 'Netral', 'Positif'])
+        plt.title('Confusion Matrix')
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        st.pyplot(plt)
+
+    # --- Save and Download Processed Data ---
+    f_busu_clean.to_csv('data_reviews_with_sentiment_cleaned.csv', index=False)
+    st.download_button(
+        label="Download Cleaned Data",
+        data=f_busu_clean.to_csv(index=False),
+        file_name="data_reviews_with_sentiment_cleaned.csv",
+        mime="text/csv"
     )
-
-elif menu == "Data Analysis":
-    st.title("Data Analysis")
-
-    # Upload dataset
-    uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-        st.subheader("Dataset Preview")
-        st.write(df.head())
-
-        # Clean text data
-        df['cleaned_text'] = df['content'].apply(clean_text)
-        df['cleaned_text'] = df['cleaned_text'].apply(remove_stopwords)
-        df['cleaned_text'] = df['cleaned_text'].apply(stem_text)
-
-        # Word Cloud
-        st.subheader("Word Cloud")
-        all_text = " ".join(df['cleaned_text'])
-        wordcloud = WordCloud(width=800, height=400, background_color="white").generate(all_text)
-
-        fig, ax = plt.subplots()
-        ax.imshow(wordcloud, interpolation="bilinear")
-        ax.axis("off")
-        st.pyplot(fig)
-
-        # Sentiment Distribution
-        if 'sentiment' in df.columns:
-            st.subheader("Sentiment Distribution")
-            fig, ax = plt.subplots()
-            sns.countplot(x='sentiment', data=df, ax=ax, palette="Set2")
-            st.pyplot(fig)
-
-elif menu == "Model Training":
-    st.title("Model Training")
-
-    if 'df' in locals():
-        if 'sentiment' in df.columns:
-            # Prepare data
-            X = df['cleaned_text']
-            y = df['sentiment']
-
-            vectorizer = TfidfVectorizer(max_features=5000)
-            X_vec = vectorizer.fit_transform(X)
-
-            X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.3, random_state=42)
-
-            # Train model
-            model = SVC(kernel='linear')
-            model.fit(X_train, y_train)
-
-            # Evaluate model
-            y_pred = model.predict(X_test)
-
-            st.subheader("Classification Report")
-            st.text(classification_report(y_test, y_pred))
-
-            st.subheader("Confusion Matrix")
-            cm = confusion_matrix(y_test, y_pred)
-            fig, ax = plt.subplots()
-            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Negative', 'Neutral', 'Positive'], yticklabels=['Negative', 'Neutral', 'Positive'])
-            st.pyplot(fig)
-
-            # Suggestion based on sentiment
-            st.subheader("Suggestion Based on Sentiment")
-            sentiment_counts = pd.Series(y_pred).value_counts()
-
-            if sentiment_counts.idxmax() == 'Positive':
-                st.success("Most reviews are positive! Keep up the good work and continue to improve.")
-            elif sentiment_counts.idxmax() == 'Negative':
-                st.error("Many reviews are negative. Consider addressing common issues mentioned.")
-            else:
-                st.info("Neutral sentiment dominates. Engage with users to create a stronger positive experience.")
-
-    else:
-        st.warning("Please upload a dataset in the Data Analysis section first.")
