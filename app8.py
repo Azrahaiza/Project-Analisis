@@ -29,7 +29,7 @@ st.markdown("""
             text-align: center;
         }
         .description {
-            font-size: 12px;
+            font-size: 24px;
             color: #FFF5E1;
             text-align: center;
             margin-bottom: 20px;
@@ -43,7 +43,7 @@ st.markdown("""
             font-size: 16px;
             background-color: #2E8B57;
             color: white;
-            padding: 10px 20px;
+            padding: 10px 16px;
             border-radius: 5px;
             text-align: center;
         }
