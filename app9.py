@@ -165,6 +165,24 @@ if uploaded_file:
     plt.ylabel('Sebenarnya', fontsize=12)
     st.pyplot(plt)
 
+    # Tampilkan Matriks TF-IDF
+    st.subheader("Matriks TF-IDF (Fitur Teratas):")
+    tfidf_df = pd.DataFrame(X_train_tfidf.toarray(), columns=vectorizer.get_feature_names_out())
+    st.write(tfidf_df.head(10))
+
+    # Tambahkan tabel distribusi sentimen
+    st.subheader("Tabel Distribusi Sentimen:")
+    sentiment_counts = f_busu_clean['sentiment'].value_counts().reset_index()
+    sentiment_counts.columns = ['Sentimen', 'Jumlah']
+    st.write(sentiment_counts)
+
+    # Tambahkan tampilan kata hasil stemming
+    st.subheader("Kata-Kata Setelah Stemming:")
+    stemmed_words = " ".join(f_busu_clean["text_stemmed"].dropna()).split()
+    unique_stemmed_words = pd.DataFrame(stemmed_words, columns=["Kata"]).value_counts().reset_index()
+    unique_stemmed_words.columns = ["Kata", "Frekuensi"]
+    st.write(unique_stemmed_words.head(20))
+
     f_busu_clean.to_csv('data_reviews_with_sentiment_cleaned.csv', index=False)
     st.download_button(
         label="Unduh Data yang Sudah Diproses",
