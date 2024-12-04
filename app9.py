@@ -72,6 +72,7 @@ if uploaded_file:
     f_busu['sentiment'] = f_busu.apply(assign_sentiment, axis=1)
 
     # --- Pembersihan Data ---
+    @st.cache_data
     def clean_text(df, text_field, new_text_field_name):
         df[new_text_field_name] = df[text_field].str.lower()  # Mengubah teks menjadi huruf kecil
         df[new_text_field_name] = df[new_text_field_name].apply(
@@ -80,14 +81,20 @@ if uploaded_file:
         df[new_text_field_name] = df[new_text_field_name].apply(lambda elem: re.sub(r"\d+", "", elem))
         return df
 
+    @st.cache_data
     def remove_stopwords(text):
         stop = stopwords.words('indonesian')
         return ' '.join([word for word in text.split() if word not in stop])
 
     # Membuat stemmer dari Sastrawi
-    factory = StemmerFactory()
-    stemmer = factory.create_stemmer()
+    @st.cache_resource
+    def create_stemmer():
+        factory = StemmerFactory()
+        return factory.create_stemmer()
 
+    stemmer = create_stemmer()
+
+    @st.cache_data
     def apply_stemming(text):
         return stemmer.stem(text)
 
@@ -133,7 +140,7 @@ if uploaded_file:
     y = f_busu_clean['sentiment']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-    vectorizer = TfidfVectorizer(max_features=5000)
+    vectorizer = TfidfVectorizer(max_features=3000)
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_test_tfidf = vectorizer.transform(X_test)
 
