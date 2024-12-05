@@ -113,17 +113,17 @@ if uploaded_file:
         return stemmer.stem(text)
 
     # Pembersihan teks
-    st.subheader("Langkah 1: Pembersihan Teks")
+    st.subheader("Data Pembersihan Teks")
     f_busu_clean = clean_text(f_busu, 'content', 'text_clean')
     st.write(f_busu_clean[['content', 'text_clean']].head(10))
 
     # Menghapus stopword
-    st.subheader("Langkah 2: Penghapusan Stopwords")
+    st.subheader("Data Penghapusan Stopwords")
     f_busu_clean['text_StopWord'] = f_busu_clean['text_clean'].apply(remove_stopwords)
     st.write(f_busu_clean[['text_clean', 'text_StopWord']].head(10))
 
     # Melakukan stemming
-    st.subheader("Langkah 3: Proses Stemming")
+    st.subheader("Proses Stemming")
     f_busu_clean['text_stemmed'] = f_busu_clean['text_StopWord'].apply(apply_stemming)
     st.write(f_busu_clean[['text_StopWord', 'text_stemmed']].head(10))
 
@@ -185,10 +185,24 @@ if uploaded_file:
     plt.ylabel('Sebenarnya', fontsize=12)
     st.pyplot(plt)
 
-    # Tampilkan Matriks TF-IDF
+    # Tampilkan Matriks TF-IDF dengan fitur teratas
     st.subheader("Matriks TF-IDF (Fitur Teratas):")
+
+    # Ubah matriks menjadi DataFrame
     tfidf_df = pd.DataFrame(X_train_tfidf.toarray(), columns=vectorizer.get_feature_names_out())
-    st.write(tfidf_df.head(10))
+
+    # Ambil hanya kolom dengan nilai TF-IDF tertinggi untuk setiap dokumen
+    top_features_per_doc = tfidf_df.apply(lambda x: x[x > 0].nlargest(5).index.tolist(), axis=1)
+
+    # Buat DataFrame untuk visualisasi
+    tfidf_top_df = pd.DataFrame({
+        'Dokumen': [f"Dokumen {i+1}" for i in range(len(top_features_per_doc))],
+        'Fitur TF-IDF Tertinggi': top_features_per_doc.apply(", ".join)  # Gabungkan fitur menjadi string
+    })
+
+    # Tampilkan tabel
+    st.write(tfidf_top_df.head(10))
+
 
     # Tambahkan tabel distribusi sentimen
     st.subheader("Tabel Distribusi Sentimen:")
