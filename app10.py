@@ -71,6 +71,20 @@ if uploaded_file:
 
     f_busu['sentiment'] = f_busu.apply(assign_sentiment, axis=1)
 
+    # --- Tampilan Data ---
+    st.subheader("Data Ulasan:")
+    st.write(f_busu.head(10))  # Tampilkan 10 data pertama
+
+    # Menampilkan data berdasarkan sentimen
+    st.subheader("Data dengan Sentimen Positif:")
+    st.write(f_busu[f_busu['sentiment'] == 'Positif'].head(10))
+
+    st.subheader("Data dengan Sentimen Netral:")
+    st.write(f_busu[f_busu['sentiment'] == 'Netral'].head(10))
+
+    st.subheader("Data dengan Sentimen Negatif:")
+    st.write(f_busu[f_busu['sentiment'] == 'Negatif'].head(10))
+
     # --- Pembersihan Data ---
     @st.cache_data
     def clean_text(df, text_field, new_text_field_name):
